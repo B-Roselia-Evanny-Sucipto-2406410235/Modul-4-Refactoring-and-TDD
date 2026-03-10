@@ -35,7 +35,6 @@ public class PaymentServiceImpl implements PaymentService {
                 setStatus(payment, PaymentStatus.REJECTED.getValue(), order);
             }
         }
-
         return payment;
     }
 

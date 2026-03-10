@@ -29,6 +29,7 @@ public class PaymentServiceImplTest {
 
     List<Order> orders;
     Map<String, String> paymentDataVoucher;
+    Map<String, String> paymentDataCash = new HashMap<>();
 
     @BeforeEach
     void setUp() {
@@ -55,6 +56,8 @@ public class PaymentServiceImplTest {
         orders.add(order2);
 
         paymentDataVoucher = Map.of("voucherCode", "ESHOP1234ABC5678");
+        paymentDataCash.put("address", "Address");
+        paymentDataCash.put("deliveryFee", "888");
     }
 
     @Test
@@ -66,6 +69,20 @@ public class PaymentServiceImplTest {
         Payment result = paymentService.addPayment(orders.get(0), "VOUCHER", paymentDataVoucher);
 
         assertEquals(PaymentStatus.SUCCESS.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testAddPaymentVoucherNullCode() {
+        Map<String, String> invalidVoucher = new HashMap<>();
+        invalidVoucher.put("voucherCode", null);
+        Payment payment = new Payment("c61d39c4-e6f0-4a62-ad8b-eccd28e76dc3", "VOUCHER", invalidVoucher);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "VOUCHER", invalidVoucher);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
         verify(paymentRepository, times(1)).save(any(Payment.class));
     }
 
@@ -84,7 +101,7 @@ public class PaymentServiceImplTest {
 
     @Test
     void testAddPaymentVoucherNoPrefix() {
-        Map<String, String> invalidVoucher = Map.of("voucherCode", "1234ABC5678");
+        Map<String, String> invalidVoucher = Map.of("voucherCode", "1234ABCD56789012");
         Payment payment = new Payment("c61d39c4-e6f0-4a62-ad8b-eccd28e76dc3", "VOUCHER", invalidVoucher);
 
         when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
@@ -171,5 +188,118 @@ public class PaymentServiceImplTest {
 
         assertEquals(2, result.size());
         verify(paymentRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testAddPaymentCashOnDeliverySuccess() {
+        Payment payment = new Payment("8af9414d-4010-4000-a0e9-1900eb217417", "VOUCHER", paymentDataCash);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "CASH_ON_DELIVERY", paymentDataCash);
+
+        assertEquals(PaymentStatus.SUCCESS.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testAddPaymentCashOnDeliveryNoAddress() {
+        Map<String, String> cashPayment = new HashMap<>();
+        cashPayment.put("deliveryFee", "888");
+        Payment payment = new Payment("8af9414d-4010-4000-a0e9-1900eb217417", "CASH_ON_DELIVERY", cashPayment);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "CASH_ON_DELIVERY", cashPayment);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testAddPaymentCashOnDeliveryBlankAddress() {
+        Map<String, String> cashPayment = new HashMap<>();
+        cashPayment.put("address", "");
+        cashPayment.put("deliveryFee", "888");
+        Payment payment = new Payment("8af9414d-4010-4000-a0e9-1900eb217417", "CASH_ON_DELIVERY", cashPayment);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "CASH_ON_DELIVERY", cashPayment);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testAddPaymentCashOnDeliveryNullAddress() {
+        Map<String, String> cashPayment = new HashMap<>();
+        cashPayment.put("address", null);
+        cashPayment.put("deliveryFee", "888");
+        Payment payment = new Payment("8af9414d-4010-4000-a0e9-1900eb217417", "CASH_ON_DELIVERY", cashPayment);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "CASH_ON_DELIVERY", cashPayment);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testAddPaymentCashOnDeliveryNoDeliveryFee() {
+        Map<String, String> cashPayment = new HashMap<>();
+        cashPayment.put("address", "Address");
+        Payment payment = new Payment("8af9414d-4010-4000-a0e9-1900eb217417", "CASH_ON_DELIVERY", cashPayment);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "CASH_ON_DELIVERY", cashPayment);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testAddPaymentCashOnDeliveryBlankDeliveryFee() {
+        Map<String, String> cashPayment = new HashMap<>();
+        cashPayment.put("address", "Address");
+        cashPayment.put("deliveryFee", "");
+        Payment payment = new Payment("8af9414d-4010-4000-a0e9-1900eb217417", "CASH_ON_DELIVERY", cashPayment);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "CASH_ON_DELIVERY", cashPayment);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testAddPaymentCashOnDeliveryNullDeliveryFee() {
+        Map<String, String> cashPayment = new HashMap<>();
+        cashPayment.put("address", "Address");
+        cashPayment.put("deliveryFee", null);
+        Payment payment = new Payment("8af9414d-4010-4000-a0e9-1900eb217417", "CASH_ON_DELIVERY", cashPayment);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "CASH_ON_DELIVERY", cashPayment);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testAddPaymentInvalidMethod() {
+        Map<String, String> invalid = Map.of("hello", "hello");
+        Payment payment = new Payment("c61d39c4-e6f0-4a62-ad8b-eccd28e76dc3", "MEOW", invalid);
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Payment result = paymentService.addPayment(orders.get(0), "MEOW", invalid);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
     }
 }
