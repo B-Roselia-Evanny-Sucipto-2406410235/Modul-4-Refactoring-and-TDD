@@ -34,7 +34,23 @@ public class PaymentServiceImpl implements PaymentService {
             } else {
                 setStatus(payment, PaymentStatus.REJECTED.getValue(), order);
             }
+        } else if ("CASH_ON_DELIVERY".equals(method)) {
+            if (!paymentData.containsKey("address") || !paymentData.containsKey("deliveryFee")) {
+                setStatus(payment, PaymentStatus.REJECTED.getValue(), order);
+            } else {
+                String address = paymentData.get("address");
+                String deliveryFee = paymentData.get("deliveryFee");
+
+                if (address == null || address.isBlank() || deliveryFee == null || deliveryFee.isBlank()) {
+                    setStatus(payment, PaymentStatus.REJECTED.getValue(), order);
+                } else {
+                    setStatus(payment, PaymentStatus.SUCCESS.getValue(), order);
+                }
+            }
+        } else {
+            setStatus(payment, PaymentStatus.REJECTED.getValue(), order);
         }
+
         return payment;
     }
 
