@@ -23,7 +23,7 @@ java {
 
 sonarqube {
     properties {
-        property("sonar.projectKey", "B-Roselia-Evanny-Sucipto-2406410235_Modul-2-CI-CD-DevOps")
+        property("sonar.projectKey", "B-Roselia-Evanny-Sucipto-2406410235_Modul-4-Refactoring-and-TDD")
         property("sonar.organization", "b-roselia-evanny-sucipto-2406410235")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
